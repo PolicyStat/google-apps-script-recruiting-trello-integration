@@ -34,10 +34,15 @@ var Trello = function(key, secretToken){
         return board['id'];
       }
     }
+    console.log('Trello board "', boardName, '" was not found.');
+    return null;
   }
 
   this.getBoardListNameStartsWith = function(boardName, listName) {
     var boardId = this.getBoardByName(boardName);
+    if (boardId == null) {
+      return null;
+    }
     var params = {
       fields: 'name',
     }
@@ -49,6 +54,8 @@ var Trello = function(key, secretToken){
         return boardList['id'];
       }
     }
+    console.log('Trello list "', listName, '" was not found.');
+    return null;
   }
 
   this.createCard = function(card) {
@@ -77,6 +84,10 @@ function createTrelloCard(sheetName, applicantSubmission) {
   var boardName = boardPrefix + sheetName;
   var boardListName = properties.getProperty('TRELLO_BOARD_LIST_NAME_PREFIX');
   var jobBoardList = trello.getBoardListNameStartsWith(boardName, boardListName);
+
+  if (jobBoardList == null) {
+    return null;
+  }
 
   var applicantName = applicantSubmission['First name'] + ' ' + applicantSubmission['Last name'];
   var description = 'Email address: ' + applicantSubmission['Email Address'] + '\n';
