@@ -89,9 +89,10 @@ function createTrelloCard(sheetName, applicantSubmission) {
     return null;
   }
 
-  var applicantName = applicantSubmission['First name'] + ' ' + applicantSubmission['Last name'];
+  var applicantName = applicantSubmission['First name'] + ' ' + applicantSubmission['Last name'] + ' ' + applicantSubmission['Email Address'];
   var description = 'Email address: ' + applicantSubmission['Email Address'] + '\n';
   description += 'Phone: ' + applicantSubmission['Phone number'] + '\n';
+  description += 'Cover letter: ' + applicantSubmission['Cover letter'] + '\n';
 
   var card = {
     idList: jobBoardList,
@@ -126,6 +127,7 @@ function test_createTrelloCard() {
     'Email Address': 'tyrion@casterlyrock.com',
     'Phone number': '123456',
     'Resume': 'http://www.casterlyrock.com',
+    'Cover letter': 'Link to cover letter',
   }
   createTrelloCard(sheetName, applicantSubmission);
 }
