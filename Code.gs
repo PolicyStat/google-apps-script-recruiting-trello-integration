@@ -1,3 +1,7 @@
+// Occasionally, the script will lose it's permissions and stop triggering
+// If that happens, you need to manually run one of the functions
+// Google will prompt you to authorize the script
+
 var Trello = function(key, secretToken){
   this.key = key;
   this.secretToken = secretToken;
@@ -63,15 +67,23 @@ var Trello = function(key, secretToken){
   }
 };
 
-function onFormSubmit(event) {
-  var sheetName = SpreadsheetApp.getActiveSheet().getName();
+function updateMasterSheet(values, currentSheetName) {
   var masterSheetName = PropertiesService.getScriptProperties().getProperty('MASTER_SHEET_NAME')
   var masterSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(masterSheetName);
 
   // Add a new row to the master sheet using the submitted values, except we want the active sheet name at the beginning
-  var newRowForMasterSheet = [sheetName].concat(event.values);
+  var newRowForMasterSheet = [currentSheetName].concat(values);
   masterSheet.appendRow(newRowForMasterSheet);
+}
 
+function onFormSubmit(event) {
+  console.log('onFormSubmit: %s', event.namedValues);
+  if (event.namedValues['Email Address'] == '') {
+    console.log('Blank submission: ignoring');
+    return
+  }
+  var sheetName = SpreadsheetApp.getActiveSheet().getName();
+  updateMasterSheet(event.values, sheetName);
   createTrelloCard(sheetName, event.namedValues);
 }
 
@@ -90,9 +102,7 @@ function createTrelloCard(sheetName, applicantSubmission) {
   }
 
   var applicantName = applicantSubmission['First name'] + ' ' + applicantSubmission['Last name'] + ' ' + applicantSubmission['Email Address'];
-  var description = 'Email address: ' + applicantSubmission['Email Address'] + '\n';
-  description += 'Phone: ' + applicantSubmission['Phone number'] + '\n';
-  description += 'Cover letter: ' + applicantSubmission['Cover letter'] + '\n';
+  var description = buildTrelloCardDescription(applicantSubmission);
 
   var card = {
     idList: jobBoardList,
@@ -101,6 +111,20 @@ function createTrelloCard(sheetName, applicantSubmission) {
     urlSource: applicantSubmission['Resume'],
   }
   return trello.createCard(card);
+}
+
+function buildTrelloCardDescription(applicantSubmission) {
+  var description = '';
+  for (var fieldName in applicantSubmission) {
+    if (fieldName.indexOf('Gender') == 0) {
+      continue;
+    }
+    if (fieldName.indexOf('Race') == 0) {
+      continue;
+    }
+    description += fieldName + ': ' + applicantSubmission[fieldName] + '\n';
+  }
+  return description;
 }
 
 function serializeParams(params) {
@@ -120,7 +144,7 @@ function buildURL(url, params) {
 
 function test_createTrelloCard() {
   console.log('Testing createTrelloCard');
-  var sheetName = 'Product: Software Engineer';
+  var sheetName = 'Product: Python + Django Software Engineer';
   var applicantSubmission = {
     'First name': 'Tyrion',
     'Last name': 'Lannister',
@@ -128,6 +152,8 @@ function test_createTrelloCard() {
     'Phone number': '123456',
     'Resume': 'http://www.casterlyrock.com',
     'Cover letter': 'Link to cover letter',
+    'Race': 'foo',
+    'Gender': 'bar',
   }
   createTrelloCard(sheetName, applicantSubmission);
 }
