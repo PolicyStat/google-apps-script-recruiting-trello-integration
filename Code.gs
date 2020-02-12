@@ -67,15 +67,6 @@ var Trello = function(key, secretToken){
   }
 };
 
-function updateMasterSheet(values, currentSheetName) {
-  var masterSheetName = PropertiesService.getScriptProperties().getProperty('MASTER_SHEET_NAME')
-  var masterSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(masterSheetName);
-
-  // Add a new row to the master sheet using the submitted values, except we want the active sheet name at the beginning
-  var newRowForMasterSheet = [currentSheetName].concat(values);
-  masterSheet.appendRow(newRowForMasterSheet);
-}
-
 function onFormSubmit(event) {
   console.log('onFormSubmit: %s', event.namedValues);
   if (event.namedValues['Email Address'] == '') {
@@ -83,7 +74,6 @@ function onFormSubmit(event) {
     return
   }
   var sheetName = SpreadsheetApp.getActiveSheet().getName();
-  updateMasterSheet(event.values, sheetName);
   createTrelloCard(sheetName, event.namedValues);
 }
 
@@ -101,7 +91,7 @@ function createTrelloCard(sheetName, applicantSubmission) {
     return null;
   }
 
-  var applicantName = applicantSubmission['First name'] + ' ' + applicantSubmission['Last name'] + ' ' + applicantSubmission['Email Address'];
+  var applicantName = applicantSubmission['Full name'] + ' ' + applicantSubmission['Email Address'];
   var description = buildTrelloCardDescription(applicantSubmission);
 
   var card = {
@@ -116,12 +106,6 @@ function createTrelloCard(sheetName, applicantSubmission) {
 function buildTrelloCardDescription(applicantSubmission) {
   var description = '';
   for (var fieldName in applicantSubmission) {
-    if (fieldName.indexOf('Gender') == 0) {
-      continue;
-    }
-    if (fieldName.indexOf('Race') == 0) {
-      continue;
-    }
     description += fieldName + ': ' + applicantSubmission[fieldName] + '\n';
   }
   return description;
@@ -146,14 +130,9 @@ function test_createTrelloCard() {
   console.log('Testing createTrelloCard');
   var sheetName = 'Product: Python + Django Software Engineer';
   var applicantSubmission = {
-    'First name': 'Tyrion',
-    'Last name': 'Lannister',
+    'Full name': 'Tyrion Lannister',
     'Email Address': 'tyrion@casterlyrock.com',
-    'Phone number': '123456',
     'Resume': 'http://www.casterlyrock.com',
-    'Cover letter': 'Link to cover letter',
-    'Race': 'foo',
-    'Gender': 'bar',
   }
   createTrelloCard(sheetName, applicantSubmission);
 }
